@@ -40,9 +40,11 @@ class ActivityResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery();
+        $user = auth()->user();
 
-        if (!auth()->user()->hasRole('super_admin')) { // admin bisa lihat semua
-            $query->where('initial', auth()->user()->initial);
+        // Super admin, supervisor, dan manager bisa lihat semua
+        if (!$user->hasAnyRole(['super_admin', 'supervisor', 'manager'])) {
+            $query->where('initial', $user->initial);
         }
 
         return $query;

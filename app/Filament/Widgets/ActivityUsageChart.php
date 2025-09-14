@@ -5,6 +5,7 @@ namespace App\Filament\Widgets;
 use App\Models\Activity;
 use Filament\Widgets\ChartWidget;
 use Filament\Forms;
+use Illuminate\Support\Facades\Auth;
 
 class ActivityUsageChart extends ChartWidget
 {
@@ -17,8 +18,12 @@ class ActivityUsageChart extends ChartWidget
 
     protected function getData(): array
     {
+        $user = Auth::user();
         $query = Activity::query();
 
+        if (!in_array($user->roles()->first()?->name, ['super_admin', 'admin'])) {
+            $query->where('initial', $user->initial);
+        }
         // 🔎 Filter bulan
         if ($this->filterMonth) {
             $query->whereMonth('start_date', date('m', strtotime($this->filterMonth)))

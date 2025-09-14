@@ -6,6 +6,7 @@ use Filament\Widgets\StatsOverviewWidget as BaseWidget;
 use Filament\Widgets\StatsOverviewWidget\Card;
 use App\Models\OvertimeSummary;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Auth;
 
 class OvertimeStats extends BaseWidget
 {
@@ -14,7 +15,17 @@ class OvertimeStats extends BaseWidget
 
     protected function getCards(): array
     {
+        $user = Auth::user();
         $bulan = Carbon::now()->format('Y-m');
+
+        $query = OvertimeSummary::where('bulan', $bulan);
+
+        // Filter berdasarkan role login
+        $role = $user->getRoleNames()->first(); // menggunakan getRoleNames()
+        if (!in_array($role, ['super_admin', 'admin'])) {
+            // user biasa lihat data sendiri
+            $query->where('initial', $user->initial);
+        }
 
         $totalLembur = OvertimeSummary::where('bulan', $bulan)->sum('total_lembur');
         $avgLembur = OvertimeSummary::where('bulan', $bulan)->avg('total_lembur');

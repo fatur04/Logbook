@@ -101,12 +101,12 @@ class Activity extends Model
 
             $totalJam = $start->diffInMinutes($end) / 60;
             // 🚫 Jika ≤ 8 jam, tidak dianggap lembur
-            if ($totalJam <= 8) {
+            if ($totalJam <= 9) {
                 // Pastikan juga kalau ada lembur sebelumnya dihapus
                 Overtime::where('activity_id', $this->id)->delete();
                 return;
             }
-            $lembur = max(0, $totalJam - 8);
+            $lembur = max(0, $totalJam - 9);
 
             // ------------------------------
             // Update atau buat Overtime

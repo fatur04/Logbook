@@ -20,6 +20,18 @@ class UserResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    public static function getEloquentQuery(): Builder
+    {
+        $query = parent::getEloquentQuery();
+        $user = auth()->user();
+
+        if (!$user->hasAnyRole(['super_admin', 'supervisor', 'manager'])) {
+            $query->where('initial', $user->initial);
+        }
+
+        return $query;
+    }
+
     public static function form(Form $form): Form
     {
         return $form

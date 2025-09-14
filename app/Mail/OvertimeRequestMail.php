@@ -27,37 +27,17 @@ class OvertimeRequestMail extends Mailable
 
     public function build()
     {
+        $approveUrl = route('overtimes.approve', ['token' => $this->overtime->approval_token]);
+        $rejectUrl  = route('overtimes.reject', ['token' => $this->overtime->approval_token]);
+
         return $this->subject('Pengajuan Lembur Baru - ' . $this->overtime->nama)
-            ->markdown('emails.overtime.request');
-    }
-
-    /**
-     * Get the message envelope.
-     */
-    public function envelope(): Envelope
-    {
-        return new Envelope(
-            subject: 'Overtime Request Mail',
-        );
-    }
-
-    /**
-     * Get the message content definition.
-     */
-    public function content(): Content
-    {
-        return new Content(
-            markdown: 'emails.overtime-request',
-        );
-    }
-
-    /**
-     * Get the attachments for the message.
-     *
-     * @return array<int, \Illuminate\Mail\Mailables\Attachment>
-     */
-    public function attachments(): array
-    {
-        return [];
+            ->view('emails.overtime-request')
+            ->with([
+                'overtime'   => $this->overtime,
+                'type'       => $this->type,
+                'approveUrl' => $approveUrl,
+                'rejectUrl'  => $rejectUrl,
+                'recipientName' => $this->recipientName,
+            ]);
     }
 }

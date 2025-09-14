@@ -19,16 +19,18 @@ class Dashboard extends Page
     public function getHeaderWidgets(): array
     {
         return [
-            OvertimeStats::class,
-            TopEmployeeProgress::class,
-        ];
-    }
-
-    public function getFooterWidgets(): array
-    {
-        return [
+            //OvertimeStats::class,
+            //TopEmployeeProgress::class,
             OvertimeStackedChart::class,
             ActivityUsageChart::class,
         ];
     }
+
+    // public function getFooterWidgets(): array
+    // {
+    //     return [
+    //         // OvertimeStackedChart::class,
+    //         // ActivityUsageChart::class,
+    //     ];
+    // }
 }

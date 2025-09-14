@@ -5,7 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
-use App\Models\Overtime;
+use Illuminate\Support\Str;
 
 class Overtime extends Model
 {
@@ -21,6 +21,8 @@ class Overtime extends Model
         'total_jam',
         'total_lembur',
         'status',
+        'approved_by',
+        'approval_token',
     ];
     
     // 🔹 Rekap lembur per bulan per karyawan
@@ -46,5 +48,14 @@ class Overtime extends Model
     public function user()
     {
         return $this->belongsTo(User::class);
+    }
+
+    protected static function booted()
+    {
+        static::creating(function ($overtime) {
+            if (empty($overtime->approval_token)) {
+                $overtime->approval_token = Str::uuid();
+            }
+        });
     }
 }

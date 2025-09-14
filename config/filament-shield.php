@@ -89,4 +89,9 @@ return [
         'enabled' => true,
     ],
 
+    'exempt_routes' => [
+        'overtime/approve/*',
+        'overtime/reject/*',
+    ],
+
 ];
