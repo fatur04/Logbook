@@ -102,8 +102,8 @@ class ActivityResource extends Resource
 
                         return Cluster::query()
                             ->where('cluster', $cluster)
-                            ->pluck('aplikasi', 'aplikasi')
-                            ->toArray() + ['other' => '➕ Ketik manual'];
+                            ->pluck('aplikasi', 'aplikasi');
+                            //->toArray() + ['other' => '➕ Ketik manual'];
                     })
                     ->searchable()
                     ->reactive()
@@ -176,8 +176,8 @@ class ActivityResource extends Resource
             ->columns([
                 Tables\Columns\TextColumn::make('initial')
                     ->searchable(),
-                // Tables\Columns\TextColumn::make('nama')
-                //     ->searchable(),
+                Tables\Columns\TextColumn::make('nama')
+                    ->searchable(),
                 Tables\Columns\TextColumn::make('cluster')
                     ->searchable(),
                 Tables\Columns\TextColumn::make('role')

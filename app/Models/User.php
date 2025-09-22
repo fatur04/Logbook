@@ -23,6 +23,9 @@ class User extends Authenticatable
         'initial',
         'email',
         'password',
+        'nik',
+        'signature_path',
+        'perusahaan',
     ];
 
     /**

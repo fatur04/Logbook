@@ -8,6 +8,7 @@ use Carbon\Carbon;
 use App\Models\OvertimeSummary;
 use Illuminate\Support\Facades\Mail;
 use App\Mail\OvertimeRequestMail;
+use App\Models\User;
 
 class Activity extends Model
 {
@@ -100,13 +101,15 @@ class Activity extends Model
             }
 
             $totalJam = $start->diffInMinutes($end) / 60;
-            // 🚫 Jika ≤ 8 jam, tidak dianggap lembur
-            if ($totalJam <= 9) {
-                // Pastikan juga kalau ada lembur sebelumnya dihapus
-                Overtime::where('activity_id', $this->id)->delete();
-                return;
-            }
-            $lembur = max(0, $totalJam - 9);
+
+            // // 🚫 Jika ≤ 8 jam, tidak dianggap lembur
+            // if ($totalJam <= 9) {
+            //     // Pastikan juga kalau ada lembur sebelumnya dihapus
+            //     Overtime::where('activity_id', $this->id)->delete();
+            //     return;
+            // }
+            // $lembur = max(0, $totalJam - 9);
+            $lembur = round($totalJam, 2);
 
             // ------------------------------
             // Update atau buat Overtime
@@ -123,18 +126,28 @@ class Activity extends Model
                     'start_date' => $this->start_date,
                     'end_date' => $this->end_date,
                     'total_jam' => round($totalJam, 2),
-                    'total_lembur' => round($lembur, 2),
+                    'total_lembur' => round($lembur),
                     'status' => 'pending',
                 ]
             );
 
-            // Kirim email ke Outlook
-            $supervisor = \App\Models\User::role('supervisor')->first();
-            if ($supervisor) {
-                Mail::to($supervisor->email)->queue(
-                    new OvertimeRequestMail($overtime, 'Engineer')
-                );
+            $supervisor = User::role('supervisor')->pluck('email')->toArray();
+            // Ambil pembuat lembur (CC)
+            $creator = $overtime->user?->email;
+
+            if (!empty($supervisor)) {
+                Mail::to($supervisor)
+                    ->cc([$creator]) // pembuat lembur masuk CC
+                    ->queue(new OvertimeRequestMail($overtime, 'Engineer'));
             }
+
+            // Kirim email ke Outlook
+            // $supervisor = \App\Models\User::role('supervisor')->first();
+            // if ($supervisor) {
+            //     Mail::to($supervisor->email)->queue(
+            //         new OvertimeRequestMail($overtime, 'Engineer')
+            //     );
+            // }
 
             // ==========================
             // REKAP BULANAN PER REKAN (initial)

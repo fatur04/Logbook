@@ -41,9 +41,9 @@ class OvertimeSummaryResource extends Resource
                     ->searchable(),
                 Tables\Columns\TextColumn::make('bulan')
                     ->searchable(),
-                Tables\Columns\TextColumn::make('total_jam')
-                    ->numeric()
-                    ->sortable(),
+                // Tables\Columns\TextColumn::make('total_jam')
+                //     ->numeric()
+                //     ->sortable(),
                 Tables\Columns\TextColumn::make('total_lembur')
                     ->numeric()
                     ->sortable(),

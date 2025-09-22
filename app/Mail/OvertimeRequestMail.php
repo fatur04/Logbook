@@ -9,6 +9,8 @@ use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
 use Illuminate\Queue\SerializesModels;
 use App\Models\Overtime;
+use App\Filament\Pages\OvertimeApprovalPage;
+
 
 class OvertimeRequestMail extends Mailable
 {
@@ -20,23 +22,21 @@ class OvertimeRequestMail extends Mailable
 
     public function __construct(Overtime $overtime, $recipientName, $type = 'pending')
     {
-        $this->overtime = $overtime;
+        $this->overtime = $overtime->load('approvedByUser');
         $this->recipientName = $recipientName;
         $this->type = $type;
     }
 
     public function build()
     {
-        $approveUrl = route('overtimes.approve', ['token' => $this->overtime->approval_token]);
-        $rejectUrl  = route('overtimes.reject', ['token' => $this->overtime->approval_token]);
+        $approvalUrl = OvertimeApprovalPage::getUrl(['token' => $this->overtime->approval_token]);
 
-        return $this->subject('Pengajuan Lembur Baru - ' . $this->overtime->nama)
+        return $this->subject('Pengajuan Lembur Baru - ' . ($this->overtime->nama ?? $this->overtime->user?->name ?? 'Unknown'))
             ->view('emails.overtime-request')
             ->with([
                 'overtime'   => $this->overtime,
                 'type'       => $this->type,
-                'approveUrl' => $approveUrl,
-                'rejectUrl'  => $rejectUrl,
+                'approvalUrl' => $approvalUrl,
                 'recipientName' => $this->recipientName,
             ]);
     }

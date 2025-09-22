@@ -14,6 +14,13 @@ return [
         'cluster' => null,
     ],
 
+    'auth' => [
+        'guard' => 'web',
+        'pages' => [
+            'login' => \Filament\Http\Livewire\Auth\Login::class,
+        ],
+    ],
+
     'tenant_model' => null,
 
     'auth_provider_model' => [

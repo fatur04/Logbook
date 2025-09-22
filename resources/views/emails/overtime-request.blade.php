@@ -27,24 +27,25 @@
         <li>Role: {{ $overtime->role }}</li>
         <li>Task: {{ $overtime->activity?->activity ?? 'N/A' }}</li>
         <li>Tanggal: {{ $overtime->start_date }} - {{ $overtime->end_date }}</li>
-        <li>Total Jam: {{ $overtime->total_jam }}</li>
+        {{-- <li>Total Jam: {{ $overtime->total_jam }}</li> --}}
         <li>Total Lembur: {{ $overtime->total_lembur }}</li>
         <li>Status: {{ ucfirst($overtime->status) }}</li>
+        <li>Approved By: {{ $overtime->approvedByUser?->name ?? '-' }}</li>
     </ul>
 
     {{-- Tombol hanya muncul jika status belum final --}}
     @if(in_array($overtime->status, ['pending', 'Engineer_approved']))
-    <p>
-        <a href="{{ $approveUrl }}" 
-        style="background:green;color:white;padding:10px 15px;text-decoration:none;">
-        Approve
-        </a>
-
-        <a href="{{ $rejectUrl }}" 
-        style="background:red;color:white;padding:10px 15px;text-decoration:none;">
-        Reject
-        </a>
-    </p>
+        <table role="presentation" border="0" cellpadding="0" cellspacing="0" style="margin:15px 0;">
+            <tr>
+                <td align="left">
+                    <a href="{{ $approvalUrl }}" 
+                    style="background:#007bff;color:white;padding:8px 16px;text-decoration:none;border-radius:6px;display:inline-block;">
+                        Lihat Detail & Approve
+                    </a>
+                </td>
+            </tr>
+        </table>
+    @endif
 
     <p>Terima kasih,<br>SEOA</p>
 </body>

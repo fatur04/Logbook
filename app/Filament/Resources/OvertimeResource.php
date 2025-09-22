@@ -92,17 +92,22 @@ class OvertimeResource extends Resource
                     ]),
                 Tables\Columns\TextColumn::make('initial')->searchable(),
                 Tables\Columns\TextColumn::make('nama')->searchable(),
-                Tables\Columns\TextColumn::make('activity')
+                Tables\Columns\TextColumn::make('activity.activity')
                     ->label('Activity')
                     ->sortable()
                     ->searchable()
-                    ->getStateUsing(fn ($record) => $record->activity?->activity ?? '-') // ambil kolom activity dari relasi
+                    ->getStateUsing(fn($record) => $record->activity?->activity ?? '-')
                     ->limit(40)
-                    ->tooltip(fn ($record) => $record->activity?->activity ?? '-'),
+                    ->tooltip(fn($record) => $record->activity?->activity ?? '-'),
                 Tables\Columns\TextColumn::make('start_date')->dateTime('d-m-Y H:i')->searchable(),
                 Tables\Columns\TextColumn::make('end_date')->dateTime('d-m-Y H:i')->searchable(),
-                Tables\Columns\TextColumn::make('total_jam')->label('Total Jam')->searchable(),
+                //Tables\Columns\TextColumn::make('total_jam')->label('Total Jam')->searchable(),
                 Tables\Columns\TextColumn::make('total_lembur')->label('Total Lembur')->searchable(),
+                Tables\Columns\TextColumn::make('approvedByUser.name')
+                    ->label('Approved By')
+                    ->sortable()
+                    ->default('-')
+                    ->searchable(),
                 
             ])
             ->defaultSort('start_date', 'desc')
@@ -125,11 +130,30 @@ class OvertimeResource extends Resource
                                   ->whereMonth('start_date', $month);
                         }
                     }),
-            ])
+                ])
+                
             ->defaultSort('start_date', 'asc')
             ->actions([
                 // Tables\Actions\ViewAction::make(),
                 // Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('download_pdf')
+                    ->label('')
+                    ->color('info')
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->button()
+                    ->visible(fn($record) => $record->status === 'approved') // hanya kalau sudah approved
+                    ->action(function ($record) {
+                        $manager = $record->approvedByUser; // relasi approved_by -> user
+                        $pdf = \PDF::loadView('pdf.overtime', [
+                            'overtime' => $record,
+                            'manager'  => $manager,
+                        ]);
+
+                        return response()->streamDownload(
+                            fn() => print($pdf->output()),
+                            "overtime_{$record->id}.pdf"
+                        );
+                    }),
                 Tables\Actions\Action::make('approve')
                     ->label('')
                     ->color('success')
@@ -139,6 +163,7 @@ class OvertimeResource extends Resource
                     ->modalHeading('Setujui Lembur')
                     ->modalDescription('Apakah Anda yakin ingin menyetujui lembur ini?')
                     ->modalSubmitActionLabel('Ya, Setujui')
+                    ->visible(fn($record) => $record->status !== 'approved' && $record->status !== 'rejected')
                     ->action(function ($record) {
                         $user = auth()->user();
                         $role = $user->roles()->first()?->name;
@@ -161,10 +186,25 @@ class OvertimeResource extends Resource
                         elseif ($role === 'supervisor' && $record->status === 'pending') {
                             $record->update(['status' => 'Engineer_approved', 'approved_by' => $user->id]);
                             // Kirim email ke MANAGER
-                            $manager = \App\Models\User::whereHas('roles', fn($q) => $q->where('name', 'manager'))->first();
-                            if ($manager) {
-                                Mail::to($manager->email)->queue(new OvertimeRequestMail($record, 'Manager'));
+
+                            // Ambil semua email role manager
+                            $managers = \App\Models\User::role('manager')->pluck('email')->toArray();
+                            $creatorEmail = [$record->user->email];
+                            $creator = $record->user?->email;
+                            $supervisor = $user->email;
+                        
+                            $ccRecipients = array_filter([$creator, $supervisor]);
+
+                            if (!empty($managers)) {
+                                Mail::to($managers)
+                                    ->cc($ccRecipients)
+                                    ->queue(new OvertimeRequestMail($record, 'Manager'));
                             }
+
+                            // $manager = \App\Models\User::whereHas('roles', fn($q) => $q->where('name', 'manager'))->first();
+                            // if ($manager) {
+                            //     Mail::to($manager->email)->queue(new OvertimeRequestMail($record, 'Manager'));
+                            // }
                         } else {
                             \Filament\Notifications\Notification::make()
                                 ->title('Anda tidak punya hak approve atau status belum sesuai')
@@ -211,6 +251,7 @@ class OvertimeResource extends Resource
                     ->modalHeading('Tolak Lembur')
                     ->modalDescription('Apakah Anda yakin ingin menolak lembur ini?')
                     ->modalSubmitActionLabel('Ya, Tolak')
+                    ->visible(fn($record) => $record->status !== 'approved' && $record->status !== 'rejected')
                     ->action(function ($record) {
                         $user = auth()->user();
                         $role = $user->roles()->first()?->name;

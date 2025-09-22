@@ -47,7 +47,12 @@ class Overtime extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class, 'initial', 'initial'); // sesuaikan jika initial FK
+    }
+
+    public function approvedByUser()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'approved_by');
     }
 
     protected static function booted()
